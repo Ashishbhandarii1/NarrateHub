@@ -9,18 +9,46 @@
         
         <form class="search-form" method="GET" action="{{ url_for('explore') }}">
             <input type="text" name="search" placeholder="Search content..." value="{{ search_term }}" class="search-input">
+            {% if current_category %}<input type="hidden" name="category" value="{{ current_category }}">{% endif %}
+            {% if current_language %}<input type="hidden" name="language" value="{{ current_language }}">{% endif %}
             <button type="submit" class="btn btn-primary">Search</button>
         </form>
     </div>
 
     <div class="category-filters">
-        <a href="{{ url_for('explore') }}" class="filter-btn {% if not current_category %}active{% endif %}">All</a>
+        <a href="{{ url_for('explore', language=current_language, tag=current_tag) }}" class="filter-btn {% if not current_category %}active{% endif %}">All</a>
         {% for cat in categories %}
-        <a href="{{ url_for('explore', category=cat) }}" class="filter-btn {% if current_category == cat %}active{% endif %}">
+        <a href="{{ url_for('explore', category=cat, language=current_language, tag=current_tag) }}" class="filter-btn {% if current_category == cat %}active{% endif %}">
             {{ category_names.get(cat, cat) }}
         </a>
         {% endfor %}
     </div>
+
+    {% if languages and languages|length > 1 %}
+    <div class="language-filters">
+        <span class="filter-label">Language:</span>
+        <a href="{{ url_for('explore', category=current_category, tag=current_tag, search=search_term) }}" class="filter-btn {% if not current_language %}active{% endif %}">All</a>
+        {% for lang in languages %}
+        <a href="{{ url_for('explore', category=current_category, language=lang, tag=current_tag, search=search_term) }}" class="filter-btn {% if current_language == lang %}active{% endif %}">
+            {{ lang }}
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if popular_tags %}
+    <div class="tag-suggestions">
+        <span class="filter-label">Tags:</span>
+        {% for tag in popular_tags %}
+        <a href="{{ url_for('explore', category=current_category, language=current_language, tag=tag) }}" class="tag-suggestion {% if current_tag == tag %}active{% endif %}">
+            {{ tag }}
+        </a>
+        {% endfor %}
+        {% if current_tag %}
+        <a href="{{ url_for('explore', category=current_category, language=current_language) }}" class="tag-suggestion">Clear tag</a>
+        {% endif %}
+    </div>
+    {% endif %}
 
     {% if content %}
     <div class="content-grid">
@@ -31,6 +59,13 @@
             <p class="card-preview">{{ item.get_preview(120) }}</p>
             <div class="card-meta">
                 <span class="card-language">{{ item.language }}</span>
+                {% if item.tags %}
+                <span class="card-tags">
+                    {% for tag in item.get_tags_list()[:2] %}
+                    <span class="mini-tag">{{ tag }}</span>
+                    {% endfor %}
+                </span>
+                {% endif %}
             </div>
             <div class="card-footer">
                 <span class="card-date">{{ item.created_at.strftime('%b %d, %Y') }}</span>
@@ -42,7 +77,10 @@
     {% else %}
     <div class="empty-state">
         <h2>No content found</h2>
-        <p>{% if search_term %}Try a different search term.{% else %}Check back soon for new content.{% endif %}</p>
+        <p>{% if search_term or current_tag or current_language %}Try different filters or search term.{% else %}Check back soon for new content.{% endif %}</p>
+        {% if search_term or current_tag or current_language or current_category %}
+        <a href="{{ url_for('explore') }}" class="btn btn-outline">Clear All Filters</a>
+        {% endif %}
     </div>
     {% endif %}
 </section>

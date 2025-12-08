@@ -55,3 +55,17 @@ class UserFavorite(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     __table_args__ = (db.UniqueConstraint('user_id', 'content_id', name='unique_user_content'),)
+
+class ReadingHistory(db.Model):
+    __tablename__ = 'reading_history'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    content_id = db.Column(db.Integer, db.ForeignKey('content.id'), nullable=False)
+    read_at = db.Column(db.DateTime, default=datetime.utcnow)
+    read_count = db.Column(db.Integer, default=1)
+    
+    user = db.relationship('User', backref=db.backref('reading_history', lazy=True, cascade='all, delete-orphan'))
+    content = db.relationship('Content', backref=db.backref('readers', lazy=True, cascade='all, delete-orphan'))
+    
+    __table_args__ = (db.UniqueConstraint('user_id', 'content_id', name='unique_user_reading'),)

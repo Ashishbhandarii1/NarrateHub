@@ -4,9 +4,29 @@
 
 {% block content %}
 <section class="library-section section-hidden">
-    <h1 class="page-title">My Library</h1>
-    <p class="page-subtitle">Your saved content</p>
+    <div class="library-header">
+        <h1 class="page-title">My Library</h1>
+        <div class="library-tabs">
+            <a href="{{ url_for('my_library') }}" class="tab-btn active">Favorites</a>
+            <a href="{{ url_for('reading_history') }}" class="tab-btn">Reading History</a>
+        </div>
+    </div>
 
+    {% if recent_history %}
+    <div class="recent-section">
+        <h2 class="subsection-title">Recently Read</h2>
+        <div class="horizontal-scroll">
+            {% for item in recent_history[:5] %}
+            <a href="{{ url_for('content_detail', content_id=item.content.id) }}" class="recent-card">
+                <span class="recent-category">{{ category_names.get(item.content.category, item.content.category) }}</span>
+                <span class="recent-title">{{ item.content.title }}</span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <h2 class="subsection-title">Saved Content</h2>
     {% if favorites %}
     <div class="content-grid">
         {% for fav in favorites %}

@@ -1,7 +1,7 @@
 import os
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, abort
-from models import db, User, Content, UserFavorite
+from models import db, User, Content, UserFavorite, ReadingHistory
 from config import SECRET_KEY, DATABASE_URL, ADMIN_PASSWORD, CONTENT_CATEGORIES, CATEGORY_DISPLAY_NAMES
 
 app = Flask(__name__)
@@ -52,6 +52,7 @@ def index():
 
 @app.route('/content/<int:content_id>')
 def content_detail(content_id):
+    from datetime import datetime
     content = Content.query.get_or_404(content_id)
     
     related = Content.query.filter(
@@ -66,6 +67,19 @@ def content_detail(content_id):
             content_id=content_id
         ).first()
         is_favorite = favorite is not None
+        
+        history = ReadingHistory.query.filter_by(
+            user_id=session['user_id'],
+            content_id=content_id
+        ).first()
+        
+        if history:
+            history.read_at = datetime.utcnow()
+            history.read_count += 1
+        else:
+            history = ReadingHistory(user_id=session['user_id'], content_id=content_id)
+            db.session.add(history)
+        db.session.commit()
     
     return render_template('content_detail.html', 
                          content=content, 
@@ -76,11 +90,19 @@ def content_detail(content_id):
 def explore():
     category = request.args.get('category', '')
     search = request.args.get('search', '')
+    language = request.args.get('language', '')
+    tag = request.args.get('tag', '')
     
     query = Content.query
     
     if category and category in CONTENT_CATEGORIES:
         query = query.filter_by(category=category)
+    
+    if language:
+        query = query.filter_by(language=language)
+    
+    if tag:
+        query = query.filter(Content.tags.ilike(f'%{tag}%'))
     
     if search:
         search_term = f'%{search}%'
@@ -94,10 +116,24 @@ def explore():
     
     content = query.order_by(Content.created_at.desc()).all()
     
+    languages = db.session.query(Content.language).distinct().all()
+    languages = sorted([l[0] for l in languages if l[0]])
+    
+    all_tags = set()
+    all_content = Content.query.all()
+    for c in all_content:
+        for t in c.get_tags_list():
+            all_tags.add(t)
+    popular_tags = sorted(list(all_tags))[:12]
+    
     return render_template('explore.html', 
                          content=content, 
                          current_category=category,
-                         search_term=search)
+                         current_language=language,
+                         current_tag=tag,
+                         search_term=search,
+                         languages=languages,
+                         popular_tags=popular_tags)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -178,7 +214,22 @@ def logout():
 @login_required
 def my_library():
     favorites = UserFavorite.query.filter_by(user_id=session['user_id']).order_by(UserFavorite.created_at.desc()).all()
-    return render_template('my_library.html', favorites=favorites)
+    recent_history = ReadingHistory.query.filter_by(user_id=session['user_id']).order_by(ReadingHistory.read_at.desc()).limit(10).all()
+    return render_template('my_library.html', favorites=favorites, recent_history=recent_history)
+
+@app.route('/reading-history')
+@login_required
+def reading_history():
+    history = ReadingHistory.query.filter_by(user_id=session['user_id']).order_by(ReadingHistory.read_at.desc()).all()
+    return render_template('reading_history.html', history=history)
+
+@app.route('/clear-history', methods=['POST'])
+@login_required
+def clear_history():
+    ReadingHistory.query.filter_by(user_id=session['user_id']).delete()
+    db.session.commit()
+    flash('Reading history cleared.', 'success')
+    return redirect(url_for('reading_history'))
 
 @app.route('/toggle-favorite/<int:content_id>', methods=['POST'])
 @login_required
