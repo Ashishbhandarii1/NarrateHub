@@ -11,6 +11,28 @@
     </div>
 </section>
 
+{% if recommendations %}
+<section class="content-section section-hidden recommended-section">
+    <div class="section-header">
+        <h2 class="section-title">Recommended For You</h2>
+        <a href="{{ url_for('explore') }}" class="section-link">Explore More</a>
+    </div>
+    <div class="content-grid">
+        {% for item in recommendations %}
+        <article class="content-card recommended">
+            <div class="card-category">{{ category_names.get(item.category, item.category) }}</div>
+            <h3 class="card-title">{{ item.title }}</h3>
+            <p class="card-preview">{{ item.get_preview(120) }}</p>
+            <div class="card-footer">
+                <span class="card-date">{{ item.created_at.strftime('%b %d, %Y') }}</span>
+                <a href="{{ url_for('content_detail', content_id=item.id) }}" class="btn btn-small">Read / Listen</a>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
 {% if latest_content %}
 <section class="content-section section-hidden">
     <div class="section-header">

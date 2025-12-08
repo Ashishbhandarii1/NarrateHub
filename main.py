@@ -35,6 +35,52 @@ def utility_processor():
         'category_names': CATEGORY_DISPLAY_NAMES
     }
 
+def get_recommendations_for_user(user_id, limit=6):
+    """Get personalized recommendations based on reading history and favorites."""
+    from collections import Counter
+    
+    user_history = ReadingHistory.query.filter_by(user_id=user_id).all()
+    favorites = UserFavorite.query.filter_by(user_id=user_id).all()
+    
+    read_content_ids = set([h.content_id for h in user_history])
+    fav_content_ids = set([f.content_id for f in favorites])
+    all_interacted_ids = read_content_ids | fav_content_ids
+    
+    if not all_interacted_ids:
+        return []
+    
+    category_scores = Counter()
+    tag_scores = Counter()
+    language_scores = Counter()
+    
+    interacted_content = Content.query.filter(Content.id.in_(all_interacted_ids)).all()
+    
+    for content in interacted_content:
+        weight = 2 if content.id in fav_content_ids else 1
+        hist = next((h for h in user_history if h.content_id == content.id), None)
+        if hist:
+            weight += min(hist.read_count, 5)
+        
+        category_scores[content.category] += weight
+        language_scores[content.language] += weight
+        for tag in content.get_tags_list():
+            tag_scores[tag] += weight
+    
+    all_content = Content.query.filter(~Content.id.in_(all_interacted_ids)).all()
+    
+    scored_content = []
+    for content in all_content:
+        score = 0
+        score += category_scores.get(content.category, 0) * 3
+        score += language_scores.get(content.language, 0) * 2
+        for tag in content.get_tags_list():
+            score += tag_scores.get(tag, 0)
+        scored_content.append((content, score))
+    
+    scored_content.sort(key=lambda x: x[1], reverse=True)
+    
+    return [c[0] for c in scored_content[:limit] if c[1] > 0]
+
 @app.route('/')
 def index():
     latest_content = Content.query.order_by(Content.created_at.desc()).limit(6).all()
@@ -43,12 +89,17 @@ def index():
     life_stories = Content.query.filter_by(category='life').order_by(Content.created_at.desc()).limit(4).all()
     history = Content.query.filter_by(category='history').order_by(Content.created_at.desc()).limit(4).all()
     
+    recommendations = []
+    if 'user_id' in session:
+        recommendations = get_recommendations_for_user(session['user_id'], limit=4)
+    
     return render_template('index.html',
                          latest_content=latest_content,
                          stories=stories,
                          poems=poems,
                          life_stories=life_stories,
-                         history=history)
+                         history=history,
+                         recommendations=recommendations)
 
 @app.route('/content/<int:content_id>')
 def content_detail(content_id):

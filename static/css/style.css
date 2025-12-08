@@ -872,6 +872,17 @@ a {
     gap: 0.25rem;
 }
 
+.recommended-section {
+    background: var(--off-white);
+    padding: 2rem;
+    border-radius: 16px;
+    margin-bottom: 2rem;
+}
+
+.content-card.recommended {
+    background: var(--white);
+}
+
 .voice-selector {
     margin-left: auto;
 }
