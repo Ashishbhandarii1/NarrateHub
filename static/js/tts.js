@@ -9,13 +9,22 @@ document.addEventListener('DOMContentLoaded', function() {
     let utterance = null;
     let isPaused = false;
     let voices = [];
+    let voicesLoaded = false;
 
     function loadVoices() {
         voices = speechSynthesis.getVoices();
+        if (voices.length > 0) {
+            voicesLoaded = true;
+        }
     }
 
     loadVoices();
-    speechSynthesis.onvoiceschanged = loadVoices;
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = loadVoices;
+    }
+    
+    setTimeout(loadVoices, 100);
+    setTimeout(loadVoices, 500);
 
     function getFemaleVoice() {
         const femaleKeywords = ['female', 'woman', 'girl', 'samantha', 'victoria', 'karen', 'moira', 'tessa', 'fiona', 'veena', 'zira', 'susan', 'hazel', 'heera'];
@@ -75,6 +84,10 @@ document.addEventListener('DOMContentLoaded', function() {
     function speak() {
         if (speechSynthesis.speaking) {
             speechSynthesis.cancel();
+        }
+
+        if (!voicesLoaded) {
+            loadVoices();
         }
 
         const text = contentTextRaw.textContent.trim();
