@@ -884,19 +884,28 @@ a {
 }
 
 .voice-selector {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     margin-left: auto;
 }
 
-.voice-select {
+.voice-selector label {
+    font-size: 0.875rem;
+    color: var(--dark-gray);
+}
+
+.voice-dropdown {
     padding: 0.5rem 1rem;
     border: 1px solid var(--light-gray);
     border-radius: 8px;
     font-size: 0.875rem;
     background: var(--white);
     cursor: pointer;
+    max-width: 200px;
 }
 
-.voice-select:focus {
+.voice-dropdown:focus {
     outline: none;
     border-color: var(--black);
 }

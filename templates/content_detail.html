@@ -32,6 +32,12 @@
         <button id="tts-stop" class="btn btn-tts" disabled>
             <span class="tts-icon">&#9632;</span> Stop
         </button>
+        <div class="voice-selector">
+            <label for="voice-select">Voice:</label>
+            <select id="voice-select" class="voice-dropdown">
+                <option value="">Auto (Best Match)</option>
+            </select>
+        </div>
         {% if session.get('user_id') %}
         <button id="favorite-btn" class="btn btn-favorite {% if is_favorite %}active{% endif %}" data-content-id="{{ content.id }}">
             <span class="favorite-icon">{% if is_favorite %}&#9829;{% else %}&#9825;{% endif %}</span>
@@ -39,6 +45,7 @@
         </button>
         {% endif %}
     </div>
+    <input type="hidden" id="content-language" value="{{ content.language }}" />
 
     <div class="detail-body" id="content-text">
         {{ content.body | safe }}
