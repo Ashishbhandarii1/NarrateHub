@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}My Library{% endblock %}
+
+{% block content %}
+<section class="library-section section-hidden">
+    <h1 class="page-title">My Library</h1>
+    <p class="page-subtitle">Your saved content</p>
+
+    {% if favorites %}
+    <div class="content-grid">
+        {% for fav in favorites %}
+        <article class="content-card">
+            <div class="card-category">{{ category_names.get(fav.content.category, fav.content.category) }}</div>
+            <h3 class="card-title">{{ fav.content.title }}</h3>
+            <p class="card-preview">{{ fav.content.get_preview(120) }}</p>
+            <div class="card-footer">
+                <span class="card-date">Saved {{ fav.created_at.strftime('%b %d, %Y') }}</span>
+                <a href="{{ url_for('content_detail', content_id=fav.content.id) }}" class="btn btn-small">Read / Listen</a>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <h2>No saved content yet</h2>
+        <p>Start exploring and save content you like to find it here later.</p>
+        <a href="{{ url_for('explore') }}" class="btn btn-primary">Explore Content</a>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Explore{% endblock %}
+
+{% block content %}
+<section class="explore-section section-hidden">
+    <div class="explore-header">
+        <h1 class="page-title">Explore Content</h1>
+        
+        <form class="search-form" method="GET" action="{{ url_for('explore') }}">
+            <input type="text" name="search" placeholder="Search content..." value="{{ search_term }}" class="search-input">
+            <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+    </div>
+
+    <div class="category-filters">
+        <a href="{{ url_for('explore') }}" class="filter-btn {% if not current_category %}active{% endif %}">All</a>
+        {% for cat in categories %}
+        <a href="{{ url_for('explore', category=cat) }}" class="filter-btn {% if current_category == cat %}active{% endif %}">
+            {{ category_names.get(cat, cat) }}
+        </a>
+        {% endfor %}
+    </div>
+
+    {% if content %}
+    <div class="content-grid">
+        {% for item in content %}
+        <article class="content-card">
+            <div class="card-category">{{ category_names.get(item.category, item.category) }}</div>
+            <h3 class="card-title">{{ item.title }}</h3>
+            <p class="card-preview">{{ item.get_preview(120) }}</p>
+            <div class="card-meta">
+                <span class="card-language">{{ item.language }}</span>
+            </div>
+            <div class="card-footer">
+                <span class="card-date">{{ item.created_at.strftime('%b %d, %Y') }}</span>
+                <a href="{{ url_for('content_detail', content_id=item.id) }}" class="btn btn-small">Read / Listen</a>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <h2>No content found</h2>
+        <p>{% if search_term %}Try a different search term.{% else %}Check back soon for new content.{% endif %}</p>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

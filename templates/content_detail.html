@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}{{ content.title }}{% endblock %}
+
+{% block content %}
+<article class="content-detail section-hidden">
+    <header class="detail-header">
+        <div class="detail-meta">
+            <span class="detail-category">{{ category_names.get(content.category, content.category) }}</span>
+            <span class="detail-language">{{ content.language }}</span>
+        </div>
+        <h1 class="detail-title">{{ content.title }}</h1>
+        <div class="detail-info">
+            <span class="detail-date">{{ content.created_at.strftime('%B %d, %Y') }}</span>
+            {% if content.tags %}
+            <div class="detail-tags">
+                {% for tag in content.get_tags_list() %}
+                <span class="tag">{{ tag }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </header>
+
+    <div class="tts-controls">
+        <button id="tts-play" class="btn btn-tts btn-primary">
+            <span class="tts-icon">&#9658;</span> Play
+        </button>
+        <button id="tts-pause" class="btn btn-tts" disabled>
+            <span class="tts-icon">&#10074;&#10074;</span> Pause
+        </button>
+        <button id="tts-stop" class="btn btn-tts" disabled>
+            <span class="tts-icon">&#9632;</span> Stop
+        </button>
+        {% if session.get('user_id') %}
+        <button id="favorite-btn" class="btn btn-favorite {% if is_favorite %}active{% endif %}" data-content-id="{{ content.id }}">
+            <span class="favorite-icon">{% if is_favorite %}&#9829;{% else %}&#9825;{% endif %}</span>
+            <span class="favorite-text">{% if is_favorite %}Saved{% else %}Save{% endif %}</span>
+        </button>
+        {% endif %}
+    </div>
+
+    <div class="detail-body" id="content-text">
+        {{ content.body | safe }}
+    </div>
+
+    <div id="content-text-raw" style="display: none;">{{ content.body }}</div>
+</article>
+
+{% if related %}
+<section class="related-section section-hidden">
+    <h2 class="section-title">Related Content</h2>
+    <div class="content-grid">
+        {% for item in related %}
+        <article class="content-card">
+            <div class="card-category">{{ category_names.get(item.category, item.category) }}</div>
+            <h3 class="card-title">{{ item.title }}</h3>
+            <p class="card-preview">{{ item.get_preview(100) }}</p>
+            <div class="card-footer">
+                <span class="card-date">{{ item.created_at.strftime('%b %d, %Y') }}</span>
+                <a href="{{ url_for('content_detail', content_id=item.id) }}" class="btn btn-small">Read / Listen</a>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/tts.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const favoriteBtn = document.getElementById('favorite-btn');
+        if (favoriteBtn) {
+            favoriteBtn.addEventListener('click', function() {
+                const contentId = this.dataset.contentId;
+                fetch(`/toggle-favorite/${contentId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const icon = this.querySelector('.favorite-icon');
+                    const text = this.querySelector('.favorite-text');
+                    if (data.status === 'added') {
+                        this.classList.add('active');
+                        icon.innerHTML = '&#9829;';
+                        text.textContent = 'Saved';
+                    } else {
+                        this.classList.remove('active');
+                        icon.innerHTML = '&#9825;';
+                        text.textContent = 'Save';
+                    }
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

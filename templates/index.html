@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<section class="hero section-hidden">
+    <div class="hero-content">
+        <h1 class="hero-title">Discover Stories That Speak</h1>
+        <p class="hero-subtitle">Explore our collection of stories, poems, and more. Read or listen - the choice is yours.</p>
+        <a href="{{ url_for('explore') }}" class="btn btn-primary">Start Exploring</a>
+    </div>
+</section>
+
+{% if latest_content %}
+<section class="content-section section-hidden">
+    <div class="section-header">
+        <h2 class="section-title">Latest Content</h2>
+        <a href="{{ url_for('explore') }}" class="section-link">View All</a>
+    </div>
+    <div class="content-grid">
+        {% for item in latest_content %}
+        <article class="content-card">
+            <div class="card-category">{{ category_names.get(item.category, item.category) }}</div>
+            <h3 class="card-title">{{ item.title }}</h3>
+            <p class="card-preview">{{ item.get_preview(120) }}</p>
+            <div class="card-footer">
+                <span class="card-date">{{ item.created_at.strftime('%b %d, %Y') }}</span>
+                <a href="{{ url_for('content_detail', content_id=item.id) }}" class="btn btn-small">Read / Listen</a>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+{% if stories %}
+<section class="content-section section-hidden">
+    <div class="section-header">
+        <h2 class="section-title">Stories</h2>
+        <a href="{{ url_for('explore', category='story') }}" class="section-link">View All Stories</a>
+    </div>
+    <div class="content-grid">
+        {% for item in stories %}
+        <article class="content-card">
+            <div class="card-category">Story</div>
+            <h3 class="card-title">{{ item.title }}</h3>
+            <p class="card-preview">{{ item.get_preview(120) }}</p>
+            <div class="card-footer">
+                <span class="card-date">{{ item.created_at.strftime('%b %d, %Y') }}</span>
+                <a href="{{ url_for('content_detail', content_id=item.id) }}" class="btn btn-small">Read / Listen</a>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+{% if poems %}
+<section class="content-section section-hidden">
+    <div class="section-header">
+        <h2 class="section-title">Poems</h2>
+        <a href="{{ url_for('explore', category='poem') }}" class="section-link">View All Poems</a>
+    </div>
+    <div class="content-grid">
+        {% for item in poems %}
+        <article class="content-card">
+            <div class="card-category">Poem</div>
+            <h3 class="card-title">{{ item.title }}</h3>
+            <p class="card-preview">{{ item.get_preview(120) }}</p>
+            <div class="card-footer">
+                <span class="card-date">{{ item.created_at.strftime('%b %d, %Y') }}</span>
+                <a href="{{ url_for('content_detail', content_id=item.id) }}" class="btn btn-small">Read / Listen</a>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+{% if life_stories %}
+<section class="content-section section-hidden">
+    <div class="section-header">
+        <h2 class="section-title">Life Stories</h2>
+        <a href="{{ url_for('explore', category='life') }}" class="section-link">View All Life Stories</a>
+    </div>
+    <div class="content-grid">
+        {% for item in life_stories %}
+        <article class="content-card">
+            <div class="card-category">Life Story</div>
+            <h3 class="card-title">{{ item.title }}</h3>
+            <p class="card-preview">{{ item.get_preview(120) }}</p>
+            <div class="card-footer">
+                <span class="card-date">{{ item.created_at.strftime('%b %d, %Y') }}</span>
+                <a href="{{ url_for('content_detail', content_id=item.id) }}" class="btn btn-small">Read / Listen</a>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+{% if history %}
+<section class="content-section section-hidden">
+    <div class="section-header">
+        <h2 class="section-title">History Bites</h2>
+        <a href="{{ url_for('explore', category='history') }}" class="section-link">View All History Bites</a>
+    </div>
+    <div class="content-grid">
+        {% for item in history %}
+        <article class="content-card">
+            <div class="card-category">History</div>
+            <h3 class="card-title">{{ item.title }}</h3>
+            <p class="card-preview">{{ item.get_preview(120) }}</p>
+            <div class="card-footer">
+                <span class="card-date">{{ item.created_at.strftime('%b %d, %Y') }}</span>
+                <a href="{{ url_for('content_detail', content_id=item.id) }}" class="btn btn-small">Read / Listen</a>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+{% if not latest_content and not stories and not poems and not life_stories and not history %}
+<section class="empty-state section-hidden">
+    <h2>No content yet</h2>
+    <p>Check back soon for stories, poems, and more.</p>
+</section>
+{% endif %}
+{% endblock %}
