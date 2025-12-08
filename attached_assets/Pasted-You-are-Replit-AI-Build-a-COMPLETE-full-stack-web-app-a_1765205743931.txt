@@ -1,0 +1,304 @@
+You are Replit AI. Build a COMPLETE full-stack web app as a Replit project using:
+
+- Backend: Python (Flask)
+- Frontend: HTML, CSS, JavaScript
+- Database: MySQL
+- Theme: strictly black and white (with gray tones), modern, minimal
+- Effects: smooth animations for page transitions, hover effects, and content cards
+
+The project is a narrated content library with login and a hidden admin area.
+
+================================
+CORE CONCEPT
+================================
+Build a website that hosts multiple types of written content:
+
+- Stories
+- News
+- Poems
+- Dialogues
+- Life Stories
+- History Bites
+
+Each content item has:
+
+- Title
+- Category (one of: story, news, poem, dialogue, life, history)
+- Full text
+- Language (e.g. English, Hindi, Hinglish)
+- Tags (e.g. “motivational”, “romantic”, “historic”)
+- Created_at timestamp
+
+Users can read the text and also click a “Play” button to have the browser narrate the content in a female voice using the Web Speech API (client-side text-to-speech).
+
+Include a basic user login system. Also include a hidden admin login with a secret URL and a password lock "admin123" (checked on the backend, not visible in frontend code). The admin can add/edit/delete content from a dashboard that is never linked from the public UI.
+
+================================
+TECH + STRUCTURE
+================================
+Use this structure:
+
+- main.py (Flask app entrypoint)
+- config.py (DB config, secret keys)
+- requirements.txt
+- templates/
+  - base.html
+  - index.html
+  - content_detail.html
+  - login.html
+  - signup.html
+  - secret_admin_login.html
+  - admin_dashboard.html
+  - admin_edit_content.html (for add/edit content)
+- static/css/
+  - style.css
+- static/js/
+  - main.js
+  - tts.js (for speech)
+  - animations.js (for scroll/hover animations)
+
+Set up Flask with:
+
+- Jinja2 templating
+- Session-based auth
+- MySQL connection using a library like mysql-connector-python or SQLAlchemy
+
+================================
+DATABASE SCHEMA (MySQL)
+================================
+
+Create these tables:
+
+1) users
+   - id (INT, PK, AUTO_INCREMENT)
+   - name (VARCHAR)
+   - email (VARCHAR, UNIQUE)
+   - password_hash (VARCHAR)  // use proper hashing in Python
+   - role (ENUM('USER','ADMIN') DEFAULT 'USER')
+   - created_at (DATETIME)
+
+2) content
+   - id (INT, PK, AUTO_INCREMENT)
+   - title (VARCHAR)
+   - category (ENUM('story','news','poem','dialogue','life','history'))
+   - language (VARCHAR)
+   - tags (VARCHAR)  // comma-separated tags
+   - body (TEXT)
+   - created_at (DATETIME)
+   - updated_at (DATETIME)
+
+Optionally add:
+
+3) user_favorites
+   - id (INT, PK, AUTO_INCREMENT)
+   - user_id (INT, FK -> users.id)
+   - content_id (INT, FK -> content.id)
+   - created_at (DATETIME)
+
+================================
+ROUTING & FEATURES
+================================
+
+Flask routes to implement:
+
+Public routes:
+- GET / 
+  - Show homepage with sections and feeds of content
+  - Sections on the page:
+    - “Latest Content”
+    - “Stories”
+    - “Poems”
+    - “Life Stories”
+    - “History Bites”
+  - Each content item appears as a card with:
+    - Title
+    - Category
+    - Short preview of text
+    - “Read / Listen” button that links to its detail page
+  - Add subtle black/white hover animations on cards
+
+- GET /content/<int:content_id>
+  - Content detail page
+  - Shows:
+    - Title
+    - Category
+    - Language
+    - Tags
+    - Created date
+    - Full text
+    - A prominent “Play” button (for narration)
+  - The Play button calls JavaScript that uses the Web Speech API to speak the text in a female voice:
+    - Choose a female voice if available
+    - Controls: play, pause, resume, stop
+  - Show a few “Related content” suggestions at the bottom based on same category or tags.
+
+- GET /login
+  - Login form for normal users.
+  - Fields: email, password.
+- POST /login
+  - Authenticate user, start session, redirect to home or “My Library”.
+
+- GET /signup
+  - Signup form: name, email, password, confirm password.
+- POST /signup
+  - Create a new user with hashed password in DB.
+
+- GET /logout
+  - Clear session and redirect to home.
+
+- GET /my-library  (only for logged-in users)
+  - Simple page that shows:
+    - Maybe “Recently viewed” or “Favorite content” if you implement favorites.
+  - If you use the favorites table, show a list of saved content here.
+
+Hidden admin routes:
+
+Important: The admin UI MUST NOT be visible or linked from any normal page. No “Admin” link in navbar or footer.
+
+- GET /secret-admin-login
+  - A minimal page (template: secret_admin_login.html) with just:
+    - “Admin Password” field
+    - Submit button
+  - This URL is the only entry point to admin login.
+- POST /secret-admin-login
+  - Check the posted password against a constant stored on the server (e.g., in config.py):
+      ADMIN_PASSWORD = "admin123"
+  - If password matches:
+      - Set a session key like session["is_admin"] = True
+      - Redirect to /admin/dashboard
+  - If not:
+      - Reload page with error message “Invalid admin password”.
+
+- GET /admin/dashboard
+  - Only accessible if session["is_admin"] is True.
+  - If not admin, redirect to home or show 404.
+  - Show:
+    - List of all content items (title, category, created_at).
+    - Buttons/links: “Add new content”, “Edit”, “Delete”.
+
+- GET /admin/content/new
+  - Form to create a new content item:
+    - title, category (dropdown), language, tags, body (textarea).
+- POST /admin/content/new
+  - Insert into DB, then redirect to /admin/dashboard.
+
+- GET /admin/content/<int:content_id>/edit
+  - Edit form with current data pre-filled.
+- POST /admin/content/<int:content_id>/edit
+  - Update the DB row, redirect back.
+
+- POST /admin/content/<int:content_id>/delete
+  - Delete the row and redirect to /admin/dashboard.
+
+All /admin/* routes must verify session["is_admin"] and block non-admin users.
+
+================================
+FRONTEND DESIGN & THEME
+================================
+
+Global rules:
+
+- Strictly black, white, and grayscale only.
+  - Backgrounds: white or near-white.
+  - Text: mostly black, with some gray for secondary text.
+  - Borders/shadows: subtle gray.
+- Use a clean, sans-serif font (e.g. system font stack).
+- Layout:
+  - A centered content wrapper with max-width.
+  - Responsive design for desktop and mobile.
+- Navbar:
+  - Top bar with site name on left.
+  - On right: Home, Explore, Login/Signup or Profile/Logout.
+  - No link to admin anywhere.
+
+Animations:
+
+- On homepage, content cards should:
+  - Slightly scale up and elevate on hover.
+  - Use CSS transition for transform and box-shadow.
+- On scroll, fade-in and slide-up sections:
+  - Implement using Intersection Observer in animations.js.
+- For buttons:
+  - Subtle background and border animations on hover.
+
+================================
+TEXT-TO-SPEECH (TTS) IMPLEMENTATION
+================================
+
+Use the browser’s Web Speech API on the frontend, in static/js/tts.js.
+
+Behavior:
+
+- On the content_detail page, include:
+  - A Play button.
+  - Optionally: Pause/Resume/Stop buttons.
+- JS should:
+  - Extract the full text of the content (from a hidden <div> or data attribute).
+  - Use `speechSynthesis` and `SpeechSynthesisUtterance`.
+  - Pick a female voice if available:
+    - Iterate through `speechSynthesis.getVoices()` and choose the first voice where name or lang suggests a female voice.
+    - If none found, just use the default voice.
+  - Support:
+    - Start reading from the beginning on Play.
+    - Pause and resume.
+    - Stop cancels the utterance.
+
+UI should visually show when reading is active (e.g. change button state).
+
+================================
+AUTH & SECURITY BASICS
+================================
+
+- Use Flask sessions with a SECRET_KEY.
+- Hash passwords using a secure method (e.g. werkzeug.security.generate_password_hash and check_password_hash).
+- Protect user-only routes:
+  - If user is not logged in, redirect to /login.
+- Protect admin-only routes:
+  - Check session["is_admin"] before loading any admin page.
+  - Do NOT expose admin password in any JS or HTML; the string "admin123" must appear only in backend Python code or environment variables, not client-side.
+
+================================
+ANIMATIONS & UX DETAILS
+================================
+
+Implement in CSS and JS:
+
+- Smooth scrolling for internal links.
+- Card hover:
+  - transform: scale(1.02);
+  - box-shadow: subtle.
+- Section entry animation:
+  - Using Intersection Observer:
+    - Add class like "section-hidden" initially.
+    - On intersect, replace with "section-visible" that has opacity:1 and translateY:0 with transition.
+
+Make sure animations are not too heavy and the site remains usable with animations disabled.
+
+================================
+EXTRA POLISH
+================================
+
+- Add a simple footer with:
+  - Site name, year, and maybe text like “A narrated library of stories and more.”
+- Implement basic server-side form validation and show error messages in templates.
+- Show success/error flash messages using Flask’s flash() for login, signup, and admin actions.
+- Make sure templates extend base.html and reuse layout properly.
+- Ensure all pages are responsive.
+
+================================
+DELIVERABLE
+================================
+
+Generate the FULL Replit project:
+
+- All Python code for Flask app and routes.
+- MySQL connection and schema creation logic or a separate SQL file to create tables.
+- All HTML templates in templates/.
+- All CSS in static/css/style.css with the black & white theme and animations.
+- All JS in static/js/main.js, tts.js, and animations.js.
+- Instructions in comments or README-style notes on:
+  - How to set up MySQL connection details.
+  - How to run the Flask app.
+  - How to access the hidden admin login URL (/secret-admin-login) and use password admin123.
+
+Make sure the app can run directly in Replit with minimal config changes.
