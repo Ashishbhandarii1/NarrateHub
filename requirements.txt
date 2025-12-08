@@ -1,0 +1,7 @@
+flask
+flask-sqlalchemy
+psycopg2-binary
+email-validator
+werkzeug
+gunicorn
+python-dotenv
