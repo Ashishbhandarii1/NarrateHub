@@ -31,6 +31,8 @@ class Content(db.Model):
     language = db.Column(db.String(50), default='English')
     tags = db.Column(db.String(500), default='')
     body = db.Column(db.Text, nullable=False)
+    # NEW: Image URL support
+    image_url = db.Column(db.String(500), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

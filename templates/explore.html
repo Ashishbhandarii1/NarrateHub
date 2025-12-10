@@ -1,87 +1,56 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 
-{% block title %}Explore{% endblock %}
+{% block title %}Explore | ARG-Listener{% endblock %}
 
 {% block content %}
-<section class="explore-section section-hidden">
-    <div class="explore-header">
-        <h1 class="page-title">Explore Content</h1>
+<div class="container">
+    <div class="hero-section" style="padding: 40px 0; text-align: left;">
+        <h1>Explore the Database</h1>
         
-        <form class="search-form" method="GET" action="{{ url_for('explore') }}">
-            <input type="text" name="search" placeholder="Search content..." value="{{ search_term }}" class="search-input">
-            {% if current_category %}<input type="hidden" name="category" value="{{ current_category }}">{% endif %}
-            {% if current_language %}<input type="hidden" name="language" value="{{ current_language }}">{% endif %}
-            <button type="submit" class="btn btn-primary">Search</button>
+        <form action="{{ url_for('explore') }}" method="GET" style="display: flex; gap: 10px; max-width: 600px; margin-top: 20px;">
+            <input type="text" name="search" placeholder="Search titles, tags, or content..." value="{{ search_term }}" style="margin-bottom: 0;">
+            <select name="category" style="width: 150px; margin-bottom: 0;">
+                <option value="">All Types</option>
+                {% for cat_code, cat_name in category_names.items() %}
+                <option value="{{ cat_code }}" {% if current_category == cat_code %}selected{% endif %}>{{ cat_name }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn"><i class="fas fa-search"></i></button>
         </form>
     </div>
 
-    <div class="category-filters">
-        <a href="{{ url_for('explore', language=current_language, tag=current_tag) }}" class="filter-btn {% if not current_category %}active{% endif %}">All</a>
-        {% for cat in categories %}
-        <a href="{{ url_for('explore', category=cat, language=current_language, tag=current_tag) }}" class="filter-btn {% if current_category == cat %}active{% endif %}">
-            {{ category_names.get(cat, cat) }}
-        </a>
+    <div style="margin-bottom: 30px;">
+        <span style="color: var(--text-muted); margin-right: 10px;">Popular Tags:</span>
+        {% for t in popular_tags %}
+            <a href="{{ url_for('explore', tag=t) }}" class="tag" style="display: inline-block; background: #222; border: 1px solid var(--border); padding: 5px 10px; margin: 0 5px 5px 0; border-radius: 4px; font-size: 0.8rem; color: var(--text-white);">#{{ t }}</a>
         {% endfor %}
     </div>
 
-    {% if languages and languages|length > 1 %}
-    <div class="language-filters">
-        <span class="filter-label">Language:</span>
-        <a href="{{ url_for('explore', category=current_category, tag=current_tag, search=search_term) }}" class="filter-btn {% if not current_language %}active{% endif %}">All</a>
-        {% for lang in languages %}
-        <a href="{{ url_for('explore', category=current_category, language=lang, tag=current_tag, search=search_term) }}" class="filter-btn {% if current_language == lang %}active{% endif %}">
-            {{ lang }}
-        </a>
-        {% endfor %}
-    </div>
-    {% endif %}
-
-    {% if popular_tags %}
-    <div class="tag-suggestions">
-        <span class="filter-label">Tags:</span>
-        {% for tag in popular_tags %}
-        <a href="{{ url_for('explore', category=current_category, language=current_language, tag=tag) }}" class="tag-suggestion {% if current_tag == tag %}active{% endif %}">
-            {{ tag }}
-        </a>
-        {% endfor %}
-        {% if current_tag %}
-        <a href="{{ url_for('explore', category=current_category, language=current_language) }}" class="tag-suggestion">Clear tag</a>
-        {% endif %}
-    </div>
-    {% endif %}
-
-    {% if content %}
-    <div class="content-grid">
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 30px;">
         {% for item in content %}
-        <article class="content-card">
-            <div class="card-category">{{ category_names.get(item.category, item.category) }}</div>
-            <h3 class="card-title">{{ item.title }}</h3>
-            <p class="card-preview">{{ item.get_preview(120) }}</p>
-            <div class="card-meta">
-                <span class="card-language">{{ item.language }}</span>
-                {% if item.tags %}
-                <span class="card-tags">
-                    {% for tag in item.get_tags_list()[:2] %}
-                    <span class="mini-tag">{{ tag }}</span>
-                    {% endfor %}
-                </span>
-                {% endif %}
+        <div class="content-card">
+            {% if item.image_url %}
+                <img src="{{ item.image_url }}" alt="{{ item.title }}" class="content-image" style="height: 180px;">
+            {% endif %}
+            
+            <h3>{{ item.title }}</h3>
+            
+            <div class="content-meta">
+                <span><i class="fas fa-scroll"></i> {{ category_names[item.category] }}</span>
+                <span><i class="fas fa-globe"></i> {{ item.language }}</span>
             </div>
-            <div class="card-footer">
-                <span class="card-date">{{ item.created_at.strftime('%b %d, %Y') }}</span>
-                <a href="{{ url_for('content_detail', content_id=item.id) }}" class="btn btn-small">Read / Listen</a>
-            </div>
-        </article>
+            
+            <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 15px;">
+                {{ item.get_preview(100) }}
+            </p>
+            
+            <a href="{{ url_for('content_detail', content_id=item.id) }}" class="btn btn-secondary" style="width: 100%; text-align: center;">View Scroll</a>
+        </div>
+        {% else %}
+        <div style="grid-column: 1/-1; text-align: center; padding: 50px; color: var(--text-muted);">
+            <h2>No scrolls found matching your criteria.</h2>
+        </div>
         {% endfor %}
     </div>
-    {% else %}
-    <div class="empty-state">
-        <h2>No content found</h2>
-        <p>{% if search_term or current_tag or current_language %}Try different filters or search term.{% else %}Check back soon for new content.{% endif %}</p>
-        {% if search_term or current_tag or current_language or current_category %}
-        <a href="{{ url_for('explore') }}" class="btn btn-outline">Clear All Filters</a>
-        {% endif %}
-    </div>
-    {% endif %}
-</section>
+</div>
 {% endblock %}

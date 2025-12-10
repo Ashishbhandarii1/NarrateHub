@@ -1,109 +1,125 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 
-{% block title %}{{ content.title }}{% endblock %}
+{% block title %}{{ content.title }} | ARG-Listener{% endblock %}
 
 {% block content %}
-<article class="content-detail section-hidden">
-    <header class="detail-header">
-        <div class="detail-meta">
-            <span class="detail-category">{{ category_names.get(content.category, content.category) }}</span>
-            <span class="detail-language">{{ content.language }}</span>
-        </div>
-        <h1 class="detail-title">{{ content.title }}</h1>
-        <div class="detail-info">
-            <span class="detail-date">{{ content.created_at.strftime('%B %d, %Y') }}</span>
-            {% if content.tags %}
-            <div class="detail-tags">
-                {% for tag in content.get_tags_list() %}
-                <span class="tag">{{ tag }}</span>
-                {% endfor %}
+<div class="container" style="max-width: 900px;">
+    
+    <div class="card" style="padding: 40px;">
+        {% if content.image_url %}
+            <img src="{{ content.image_url }}" alt="{{ content.title }}" class="content-image" style="height: 400px; margin-bottom: 30px;">
+        {% endif %}
+
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+            <div>
+                <h1 style="font-size: 2.5rem; margin-bottom: 10px;">{{ content.title }}</h1>
+                <div class="content-meta" style="font-size: 1rem;">
+                    <span><i class="fas fa-layer-group"></i> {{ category_names[content.category] }}</span>
+                    <span><i class="fas fa-language"></i> {{ content.language }}</span>
+                    <span><i class="fas fa-calendar"></i> {{ content.created_at.strftime('%B %d, %Y') }}</span>
+                </div>
             </div>
+            
+            {% if session.get('user_id') %}
+            <button onclick="toggleFavorite({{ content.id }})" id="favBtn" class="btn btn-secondary" style="border-radius: 50%; width: 50px; height: 50px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-heart" style="color: {{ 'var(--accent)' if is_favorite else 'inherit' }}"></i>
+            </button>
             {% endif %}
         </div>
-    </header>
 
-    <div class="tts-controls">
-        <button id="tts-play" class="btn btn-tts btn-primary">
-            <span class="tts-icon">&#9658;</span> Play
-        </button>
-        <button id="tts-pause" class="btn btn-tts" disabled>
-            <span class="tts-icon">&#10074;&#10074;</span> Pause
-        </button>
-        <button id="tts-stop" class="btn btn-tts" disabled>
-            <span class="tts-icon">&#9632;</span> Stop
-        </button>
-        <div class="voice-selector">
-            <label for="voice-select">Voice:</label>
-            <select id="voice-select" class="voice-dropdown">
-                <option value="">Auto (Best Match)</option>
-            </select>
+        <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 4px; border: 1px solid var(--border); margin-bottom: 30px; display: flex; align-items: center; gap: 15px;">
+            <button id="speakBtn" class="btn"><i class="fas fa-play"></i> Listen</button>
+            <button id="pauseBtn" class="btn btn-secondary" style="display: none;"><i class="fas fa-pause"></i> Pause</button>
+            <button id="stopBtn" class="btn btn-danger" style="display: none;"><i class="fas fa-stop"></i> Stop</button>
+            <span id="readingStatus" style="color: var(--accent); margin-left: auto; font-family: var(--font-heading); display: none;">Reading...</span>
         </div>
-        {% if session.get('user_id') %}
-        <button id="favorite-btn" class="btn btn-favorite {% if is_favorite %}active{% endif %}" data-content-id="{{ content.id }}">
-            <span class="favorite-icon">{% if is_favorite %}&#9829;{% else %}&#9825;{% endif %}</span>
-            <span class="favorite-text">{% if is_favorite %}Saved{% else %}Save{% endif %}</span>
-        </button>
+
+        <div class="content-body" style="font-size: 1.2rem; line-height: 1.8; color: var(--text-white); white-space: pre-wrap;">
+            {{ content.body }}
+        </div>
+
+        {% if content.tags %}
+        <div style="margin-top: 40px; border-top: 1px solid var(--border); padding-top: 20px;">
+            <span style="color: var(--text-muted); margin-right: 10px;">Tags:</span>
+            {% for tag in content.get_tags_list() %}
+                <span class="tag" style="background: #111; padding: 5px 10px; border-radius: 4px; color: var(--text-gold); font-size: 0.9rem; margin-right: 5px;">#{{ tag }}</span>
+            {% endfor %}
+        </div>
         {% endif %}
     </div>
-    <input type="hidden" id="content-language" value="{{ content.language }}" />
+</div>
 
-    <div class="detail-body" id="content-text">
-        {{ content.body | safe }}
-    </div>
-
-    <div id="content-text-raw" style="display: none;">{{ content.body }}</div>
-</article>
-
-{% if related %}
-<section class="related-section section-hidden">
-    <h2 class="section-title">Related Content</h2>
-    <div class="content-grid">
-        {% for item in related %}
-        <article class="content-card">
-            <div class="card-category">{{ category_names.get(item.category, item.category) }}</div>
-            <h3 class="card-title">{{ item.title }}</h3>
-            <p class="card-preview">{{ item.get_preview(100) }}</p>
-            <div class="card-footer">
-                <span class="card-date">{{ item.created_at.strftime('%b %d, %Y') }}</span>
-                <a href="{{ url_for('content_detail', content_id=item.id) }}" class="btn btn-small">Read / Listen</a>
-            </div>
-        </article>
-        {% endfor %}
-    </div>
-</section>
-{% endif %}
-{% endblock %}
-
-{% block scripts %}
-<script src="{{ url_for('static', filename='js/tts.js') }}"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const favoriteBtn = document.getElementById('favorite-btn');
-        if (favoriteBtn) {
-            favoriteBtn.addEventListener('click', function() {
-                const contentId = this.dataset.contentId;
-                fetch(`/toggle-favorite/${contentId}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    const icon = this.querySelector('.favorite-icon');
-                    const text = this.querySelector('.favorite-text');
-                    if (data.status === 'added') {
-                        this.classList.add('active');
-                        icon.innerHTML = '&#9829;';
-                        text.textContent = 'Saved';
-                    } else {
-                        this.classList.remove('active');
-                        icon.innerHTML = '&#9825;';
-                        text.textContent = 'Save';
-                    }
-                });
-            });
+    const synth = window.speechSynthesis;
+    const speakBtn = document.getElementById('speakBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const status = document.getElementById('readingStatus');
+    let utterance = null;
+
+    function speak() {
+        if (synth.speaking && synth.paused) {
+            synth.resume();
+            return;
+        }
+        
+        if (synth.speaking) return;
+
+        const text = document.querySelector('.content-body').innerText;
+        utterance = new SpeechSynthesisUtterance(text);
+        
+        // Try to select a female voice (often Google US English or Microsoft Zira)
+        let voices = synth.getVoices();
+        let selectedVoice = voices.find(v => v.name.includes('Female') || v.name.includes('Zira') || v.name.includes('Google US English'));
+        if (selectedVoice) utterance.voice = selectedVoice;
+
+        utterance.onstart = () => {
+            speakBtn.style.display = 'none';
+            pauseBtn.style.display = 'inline-block';
+            stopBtn.style.display = 'inline-block';
+            status.style.display = 'inline';
+        };
+
+        utterance.onend = () => { resetPlayer(); };
+
+        synth.speak(utterance);
+    }
+
+    function resetPlayer() {
+        synth.cancel();
+        speakBtn.style.display = 'inline-block';
+        pauseBtn.style.display = 'none';
+        stopBtn.style.display = 'none';
+        status.style.display = 'none';
+        pauseBtn.innerHTML = '<i class="fas fa-pause"></i> Pause';
+    }
+
+    speakBtn.addEventListener('click', speak);
+    
+    pauseBtn.addEventListener('click', () => {
+        if (synth.speaking && !synth.paused) {
+            synth.pause();
+            pauseBtn.innerHTML = '<i class="fas fa-play"></i> Resume';
+        } else {
+            synth.resume();
+            pauseBtn.innerHTML = '<i class="fas fa-pause"></i> Pause';
         }
     });
+
+    stopBtn.addEventListener('click', resetPlayer);
+
+    // Favorite Logic
+    function toggleFavorite(id) {
+        fetch(`/toggle-favorite/${id}`, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                const icon = document.querySelector('#favBtn i');
+                if (data.status === 'added') {
+                    icon.style.color = 'var(--accent)';
+                } else {
+                    icon.style.color = 'inherit';
+                }
+            });
+    }
 </script>
 {% endblock %}

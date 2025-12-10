@@ -1,40 +1,39 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 
-{% block title %}Sign Up{% endblock %}
+{% block title %}Join the Order | ARG-Listener{% endblock %}
 
 {% block content %}
-<div class="auth-container section-hidden">
-    <div class="auth-card">
-        <h1 class="auth-title">Create Account</h1>
-        <p class="auth-subtitle">Join our narrated content library</p>
-
-        <form method="POST" class="auth-form">
+<div class="container">
+    <div class="login-container" style="max-width: 450px; margin: 60px auto;">
+        <h1 style="text-align: center; margin-bottom: 30px;">Register Credentials</h1>
+        
+        <form method="POST">
             <div class="form-group">
-                <label for="name">Name</label>
-                <input type="text" id="name" name="name" required placeholder="Enter your name" value="{{ name if name else '' }}">
+                <label for="name">Explorer Name</label>
+                <input type="text" id="name" name="name" placeholder="John Doe" required>
             </div>
 
             <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" required placeholder="Enter your email" value="{{ email if email else '' }}">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" placeholder="explorer@arg-tech.com" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Create Passcode</label>
+                <input type="password" id="password" name="password" required>
             </div>
 
             <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" required placeholder="At least 6 characters" minlength="6">
+                <label for="confirm_password">Confirm Passcode</label>
+                <input type="password" id="confirm_password" name="confirm_password" required>
             </div>
-
-            <div class="form-group">
-                <label for="confirm_password">Confirm Password</label>
-                <input type="password" id="confirm_password" name="confirm_password" required placeholder="Confirm your password">
-            </div>
-
-            <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+            
+            <button type="submit" class="btn" style="width: 100%;">Initialize Account</button>
         </form>
-
-        <p class="auth-footer">
-            Already have an account? <a href="{{ url_for('login') }}">Log in</a>
-        </p>
+        
+        <div style="text-align: center; margin-top: 20px; color: var(--text-muted);">
+            <p>Already registered? <a href="{{ url_for('login') }}" style="color: var(--accent);">Login here</a></p>
+        </div>
     </div>
 </div>
 {% endblock %}

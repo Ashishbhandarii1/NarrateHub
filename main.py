@@ -36,7 +36,6 @@ def utility_processor():
     }
 
 def get_recommendations_for_user(user_id, limit=6):
-    """Get personalized recommendations based on reading history and favorites."""
     from collections import Counter
     
     user_history = ReadingHistory.query.filter_by(user_id=user_id).all()
@@ -223,17 +222,11 @@ def signup():
         confirm_password = request.form.get('confirm_password', '')
         
         errors = []
-        
-        if not name:
-            errors.append('Name is required.')
-        if not email:
-            errors.append('Email is required.')
-        if not password:
-            errors.append('Password is required.')
-        if len(password) < 6:
-            errors.append('Password must be at least 6 characters.')
-        if password != confirm_password:
-            errors.append('Passwords do not match.')
+        if not name: errors.append('Name is required.')
+        if not email: errors.append('Email is required.')
+        if not password: errors.append('Password is required.')
+        if len(password) < 6: errors.append('Password must be at least 6 characters.')
+        if password != confirm_password: errors.append('Passwords do not match.')
         
         if User.query.filter_by(email=email).first():
             errors.append('Email already registered.')
@@ -331,33 +324,27 @@ def admin_new_content():
         language = request.form.get('language', 'English').strip()
         tags = request.form.get('tags', '').strip()
         body = request.form.get('body', '').strip()
+        image_url = request.form.get('image_url', '').strip()
         
         errors = []
-        if not title:
-            errors.append('Title is required.')
-        if not category or category not in CONTENT_CATEGORIES:
-            errors.append('Valid category is required.')
-        if not body:
-            errors.append('Content body is required.')
+        if not title: errors.append('Title is required.')
+        if not category or category not in CONTENT_CATEGORIES: errors.append('Valid category is required.')
+        if not body: errors.append('Content body is required.')
         
         if errors:
             for error in errors:
                 flash(error, 'error')
             return render_template('admin_edit_content.html', 
-                                 content=None, 
-                                 is_new=True,
-                                 title=title,
-                                 category=category,
-                                 language=language,
-                                 tags=tags,
-                                 body=body)
+                                 content=None, is_new=True, title=title, category=category,
+                                 language=language, tags=tags, body=body, image_url=image_url)
         
         content = Content(
             title=title,
             category=category,
             language=language,
             tags=tags,
-            body=body
+            body=body,
+            image_url=image_url
         )
         db.session.add(content)
         db.session.commit()
@@ -378,27 +365,24 @@ def admin_edit_content(content_id):
         language = request.form.get('language', 'English').strip()
         tags = request.form.get('tags', '').strip()
         body = request.form.get('body', '').strip()
+        image_url = request.form.get('image_url', '').strip()
         
         errors = []
-        if not title:
-            errors.append('Title is required.')
-        if not category or category not in CONTENT_CATEGORIES:
-            errors.append('Valid category is required.')
-        if not body:
-            errors.append('Content body is required.')
+        if not title: errors.append('Title is required.')
+        if not category or category not in CONTENT_CATEGORIES: errors.append('Valid category is required.')
+        if not body: errors.append('Content body is required.')
         
         if errors:
             for error in errors:
                 flash(error, 'error')
-            return render_template('admin_edit_content.html', 
-                                 content=content, 
-                                 is_new=False)
+            return render_template('admin_edit_content.html', content=content, is_new=False)
         
         content.title = title
         content.category = category
         content.language = language
         content.tags = tags
         content.body = body
+        content.image_url = image_url
         db.session.commit()
         
         flash('Content updated successfully!', 'success')

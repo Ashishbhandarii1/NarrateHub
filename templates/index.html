@@ -1,152 +1,153 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 
-{% block title %}Home{% endblock %}
+{% block title %}Home | ARG-Listener{% endblock %}
 
 {% block content %}
-<section class="hero section-hidden">
-    <div class="hero-content">
-        <h1 class="hero-title">Discover Stories That Speak</h1>
-        <p class="hero-subtitle">Explore our collection of stories, poems, and more. Read or listen - the choice is yours.</p>
-        <a href="{{ url_for('explore') }}" class="btn btn-primary">Start Exploring</a>
+<div class="container">
+    
+    <div class="hero-section" style="text-align: center; padding: 60px 0;">
+        <h1>Welcome to the Archive</h1>
+        <p style="font-size: 1.2rem; color: var(--text-white); opacity: 0.8; max-width: 600px; margin: 0 auto 30px;">
+            Explore stories, histories, and poems from ages past. Listen to the whispers of time.
+        </p>
+        <a href="{{ url_for('explore') }}" class="btn">Start Journey</a>
     </div>
-</section>
 
-{% if recommendations %}
-<section class="content-section section-hidden recommended-section">
-    <div class="section-header">
-        <h2 class="section-title">Recommended For You</h2>
-        <a href="{{ url_for('explore') }}" class="section-link">Explore More</a>
-    </div>
-    <div class="content-grid">
+    {% if recommendations %}
+    <h2 style="border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 30px; margin-top: 50px;">
+        <i class="fas fa-star" style="color: var(--accent);"></i> Recommended For You
+    </h2>
+    
+    <div class="grid-layout" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 30px;">
         {% for item in recommendations %}
-        <article class="content-card recommended">
-            <div class="card-category">{{ category_names.get(item.category, item.category) }}</div>
-            <h3 class="card-title">{{ item.title }}</h3>
-            <p class="card-preview">{{ item.get_preview(120) }}</p>
-            <div class="card-footer">
-                <span class="card-date">{{ item.created_at.strftime('%b %d, %Y') }}</span>
-                <a href="{{ url_for('content_detail', content_id=item.id) }}" class="btn btn-small">Read / Listen</a>
+        <div class="content-card" style="border-color: var(--accent);">
+            {% if item.image_url %}
+                <img src="{{ item.image_url }}" alt="{{ item.title }}" class="content-image">
+            {% endif %}
+            
+            <h3>{{ item.title }}</h3>
+            <div class="content-meta">
+                <span><i class="fas fa-tag"></i> {{ category_names.get(item.category, item.category) }}</span>
+                <span><i class="fas fa-language"></i> {{ item.language }}</span>
             </div>
-        </article>
+            <p style="color: var(--text-muted);">{{ item.get_preview(100) }}</p>
+            <div style="margin-top: 20px;">
+                <a href="{{ url_for('content_detail', content_id=item.id) }}" class="btn btn-secondary" style="width: 100%; text-align: center;">Read & Listen</a>
+            </div>
+        </div>
         {% endfor %}
     </div>
-</section>
-{% endif %}
+    {% endif %}
 
-{% if latest_content %}
-<section class="content-section section-hidden">
-    <div class="section-header">
-        <h2 class="section-title">Latest Content</h2>
-        <a href="{{ url_for('explore') }}" class="section-link">View All</a>
-    </div>
-    <div class="content-grid">
+    {% if latest_content %}
+    <h2 style="border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 30px; margin-top: 50px;">
+        <i class="fas fa-clock"></i> Newly Unearthed
+    </h2>
+    
+    <div class="grid-layout" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 30px;">
         {% for item in latest_content %}
-        <article class="content-card">
-            <div class="card-category">{{ category_names.get(item.category, item.category) }}</div>
-            <h3 class="card-title">{{ item.title }}</h3>
-            <p class="card-preview">{{ item.get_preview(120) }}</p>
-            <div class="card-footer">
-                <span class="card-date">{{ item.created_at.strftime('%b %d, %Y') }}</span>
-                <a href="{{ url_for('content_detail', content_id=item.id) }}" class="btn btn-small">Read / Listen</a>
+        <div class="content-card">
+            {% if item.image_url %}
+                <img src="{{ item.image_url }}" alt="{{ item.title }}" class="content-image">
+            {% endif %}
+            
+            <h3>{{ item.title }}</h3>
+            <div class="content-meta">
+                <span><i class="fas fa-tag"></i> {{ category_names.get(item.category, item.category) }}</span>
+                <span><i class="fas fa-language"></i> {{ item.language }}</span>
             </div>
-        </article>
+            <p style="color: var(--text-muted);">{{ item.get_preview(100) }}</p>
+            <div style="margin-top: 20px;">
+                <a href="{{ url_for('content_detail', content_id=item.id) }}" class="btn btn-secondary" style="width: 100%; text-align: center;">Read & Listen</a>
+            </div>
+        </div>
         {% endfor %}
     </div>
-</section>
-{% endif %}
+    {% endif %}
 
-{% if stories %}
-<section class="content-section section-hidden">
-    <div class="section-header">
-        <h2 class="section-title">Stories</h2>
-        <a href="{{ url_for('explore', category='story') }}" class="section-link">View All Stories</a>
+    {% if stories %}
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 30px; margin-top: 50px;">
+        <h2><i class="fas fa-book-open"></i> Stories</h2>
+        <a href="{{ url_for('explore', category='story') }}" style="color: var(--accent); font-size: 0.9rem;">View All</a>
     </div>
-    <div class="content-grid">
+    
+    <div class="grid-layout" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 30px;">
         {% for item in stories %}
-        <article class="content-card">
-            <div class="card-category">Story</div>
-            <h3 class="card-title">{{ item.title }}</h3>
-            <p class="card-preview">{{ item.get_preview(120) }}</p>
-            <div class="card-footer">
-                <span class="card-date">{{ item.created_at.strftime('%b %d, %Y') }}</span>
-                <a href="{{ url_for('content_detail', content_id=item.id) }}" class="btn btn-small">Read / Listen</a>
+        <div class="content-card">
+            {% if item.image_url %}
+                <img src="{{ item.image_url }}" alt="{{ item.title }}" class="content-image">
+            {% endif %}
+            <h3>{{ item.title }}</h3>
+            <div class="content-meta">
+                <span><i class="fas fa-feather"></i> Story</span>
+                <span><i class="fas fa-calendar"></i> {{ item.created_at.strftime('%b %d') }}</span>
             </div>
-        </article>
+            <p style="color: var(--text-muted);">{{ item.get_preview(100) }}</p>
+            <div style="margin-top: 20px;">
+                <a href="{{ url_for('content_detail', content_id=item.id) }}" class="btn btn-secondary" style="width: 100%; text-align: center;">Read & Listen</a>
+            </div>
+        </div>
         {% endfor %}
     </div>
-</section>
-{% endif %}
+    {% endif %}
 
-{% if poems %}
-<section class="content-section section-hidden">
-    <div class="section-header">
-        <h2 class="section-title">Poems</h2>
-        <a href="{{ url_for('explore', category='poem') }}" class="section-link">View All Poems</a>
+    {% if poems %}
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 30px; margin-top: 50px;">
+        <h2><i class="fas fa-feather-alt"></i> Poems</h2>
+        <a href="{{ url_for('explore', category='poem') }}" style="color: var(--accent); font-size: 0.9rem;">View All</a>
     </div>
-    <div class="content-grid">
+    
+    <div class="grid-layout" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 30px;">
         {% for item in poems %}
-        <article class="content-card">
-            <div class="card-category">Poem</div>
-            <h3 class="card-title">{{ item.title }}</h3>
-            <p class="card-preview">{{ item.get_preview(120) }}</p>
-            <div class="card-footer">
-                <span class="card-date">{{ item.created_at.strftime('%b %d, %Y') }}</span>
-                <a href="{{ url_for('content_detail', content_id=item.id) }}" class="btn btn-small">Read / Listen</a>
+        <div class="content-card">
+            {% if item.image_url %}
+                <img src="{{ item.image_url }}" alt="{{ item.title }}" class="content-image">
+            {% endif %}
+            <h3>{{ item.title }}</h3>
+            <div class="content-meta">
+                <span><i class="fas fa-pen-fancy"></i> Poem</span>
             </div>
-        </article>
+            <p style="color: var(--text-muted); font-style: italic;">"{{ item.get_preview(80) }}"</p>
+            <div style="margin-top: 20px;">
+                <a href="{{ url_for('content_detail', content_id=item.id) }}" class="btn btn-secondary" style="width: 100%; text-align: center;">Read & Listen</a>
+            </div>
+        </div>
         {% endfor %}
     </div>
-</section>
-{% endif %}
+    {% endif %}
 
-{% if life_stories %}
-<section class="content-section section-hidden">
-    <div class="section-header">
-        <h2 class="section-title">Life Stories</h2>
-        <a href="{{ url_for('explore', category='life') }}" class="section-link">View All Life Stories</a>
+    {% if history %}
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 30px; margin-top: 50px;">
+        <h2><i class="fas fa-hourglass-half"></i> History Bites</h2>
+        <a href="{{ url_for('explore', category='history') }}" style="color: var(--accent); font-size: 0.9rem;">View All</a>
     </div>
-    <div class="content-grid">
-        {% for item in life_stories %}
-        <article class="content-card">
-            <div class="card-category">Life Story</div>
-            <h3 class="card-title">{{ item.title }}</h3>
-            <p class="card-preview">{{ item.get_preview(120) }}</p>
-            <div class="card-footer">
-                <span class="card-date">{{ item.created_at.strftime('%b %d, %Y') }}</span>
-                <a href="{{ url_for('content_detail', content_id=item.id) }}" class="btn btn-small">Read / Listen</a>
-            </div>
-        </article>
-        {% endfor %}
-    </div>
-</section>
-{% endif %}
-
-{% if history %}
-<section class="content-section section-hidden">
-    <div class="section-header">
-        <h2 class="section-title">History Bites</h2>
-        <a href="{{ url_for('explore', category='history') }}" class="section-link">View All History Bites</a>
-    </div>
-    <div class="content-grid">
+    
+    <div class="grid-layout" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 30px;">
         {% for item in history %}
-        <article class="content-card">
-            <div class="card-category">History</div>
-            <h3 class="card-title">{{ item.title }}</h3>
-            <p class="card-preview">{{ item.get_preview(120) }}</p>
-            <div class="card-footer">
-                <span class="card-date">{{ item.created_at.strftime('%b %d, %Y') }}</span>
-                <a href="{{ url_for('content_detail', content_id=item.id) }}" class="btn btn-small">Read / Listen</a>
+        <div class="content-card">
+            {% if item.image_url %}
+                <img src="{{ item.image_url }}" alt="{{ item.title }}" class="content-image">
+            {% endif %}
+            <h3>{{ item.title }}</h3>
+            <div class="content-meta">
+                <span><i class="fas fa-landmark"></i> History</span>
             </div>
-        </article>
+            <p style="color: var(--text-muted);">{{ item.get_preview(100) }}</p>
+            <div style="margin-top: 20px;">
+                <a href="{{ url_for('content_detail', content_id=item.id) }}" class="btn btn-secondary" style="width: 100%; text-align: center;">Read & Listen</a>
+            </div>
+        </div>
         {% endfor %}
     </div>
-</section>
-{% endif %}
+    {% endif %}
 
-{% if not latest_content and not stories and not poems and not life_stories and not history %}
-<section class="empty-state section-hidden">
-    <h2>No content yet</h2>
-    <p>Check back soon for stories, poems, and more.</p>
-</section>
-{% endif %}
+    {% if not latest_content and not stories and not poems and not history %}
+    <div style="text-align: center; padding: 100px 0; color: var(--text-muted);">
+        <i class="fas fa-box-open" style="font-size: 4rem; margin-bottom: 20px; color: var(--border);"></i>
+        <h2>The archives are currently empty.</h2>
+        <p>Return later when new scrolls have been unearthed.</p>
+    </div>
+    {% endif %}
+
+</div>
 {% endblock %}
