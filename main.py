@@ -407,6 +407,38 @@ def admin_logout():
 
 with app.app_context():
     db.create_all()
+    # --- TEMPORARY DATABASE RESET ROUTE ---
+@app.route('/force-db-reset')
+def force_db_reset():
+    # This deletes the old database structure and creates the new one
+    try:
+        with app.app_context():
+            db.drop_all()
+            db.create_all()
+            
+            # Optional: Add sample content back immediately
+            from seed_content import sample_content
+            for item in sample_content:
+                content = Content(
+                    title=item["title"],
+                    category=item["category"],
+                    language=item["language"],
+                    tags=item["tags"],
+                    body=item["body"],
+                    image_url=None  # Or add default images if you want
+                )
+                db.session.add(content)
+            
+            # Create a default admin user if you want
+            # admin = User(name="Admin", email="admin@example.com", role="ADMIN")
+            # admin.set_password("admin123")
+            # db.session.add(admin)
+            
+            db.session.commit()
+            
+        return "<h1>Database successfully reset!</h1> <p>The 'image_url' column now exists. You can go back to <a href='/'>Home</a>.</p>"
+    except Exception as e:
+        return f"<h1>Error:</h1> <p>{str(e)}</p>"
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
